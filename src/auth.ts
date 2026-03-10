@@ -1,28 +1,32 @@
-import NextAuth from 'next-auth';
-import { PrismaAdapter } from '@auth/prisma-adapter';
-import Google from 'next-auth/providers/google';
-import GitHub from 'next-auth/providers/github';
-import Credentials from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
-import { prisma } from '@/lib/prisma';
+import NextAuth from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
+import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { prisma } from "./lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
     }),
+
     GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID ?? '',
-      clientSecret: process.env.GITHUB_CLIENT_SECRET ?? '',
+      clientId: process.env.GITHUB_CLIENT_ID ?? "",
+      clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
     }),
+
     Credentials({
-      name: 'credentials',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
+
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
@@ -39,12 +43,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isValid) return null;
 
-        return { id: user.id, name: user.name, email: user.email, image: user.image };
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+        };
       },
     }),
   ],
-  session: { strategy: 'jwt' },
-  pages: { signIn: '/login', error: '/login' },
+
+  session: {
+    strategy: "jwt",
+  },
+
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
+
   callbacks: {
     async session({ session, token }) {
       if (token?.sub && session.user) {
@@ -52,6 +69,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
+
     async jwt({ token, user }) {
       if (user) token.sub = user.id;
       return token;
